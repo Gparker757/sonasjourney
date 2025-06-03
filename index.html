@@ -1,0 +1,1130 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>Sona's Journey</title>
+  <style>
+    html, body {
+      height: 100%;
+      margin: 0;
+      padding: 0;
+      width: 100vw;
+      background: #138808;
+      overflow: hidden;
+    }
+    body {
+      min-height: 100vh;
+      width: 100vw;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: flex-start;
+    }
+    .banner {
+      width: 100vw;
+      min-height: 90px;
+      background: linear-gradient(90deg, #FF9933 0%, #ffffff 50%, #138808 100%);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      box-shadow: 0 4px 16px rgba(0,0,0,0.15);
+      position: relative;
+      z-index: 2;
+    }
+    .banner-content {
+      display: flex;
+      align-items: center;
+      gap: 24px;
+    }
+    .banner-title {
+      font-family: 'Arial Black', Arial, sans-serif;
+      font-size: 2.8rem;
+      color: #fff;
+      letter-spacing: 2px;
+      text-shadow: 2px 2px 8px #222, 0 0 12px #FFD700;
+      font-weight: bold;
+    }
+    .banner-icon {
+      width: 60px;
+      height: 60px;
+      background: none;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+    .game-container {
+      flex: 1;
+      width: 100vw;
+      height: calc(100vh - 90px);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      background: none;
+      position: relative;
+    }
+    .game-inner {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 32px;
+      width: 100%;
+      height: 100%;
+      max-width: 95vw;
+      max-height: 80vh;
+    }
+    #gameCanvas {
+      background: #fff;
+      box-shadow: 0 8px 32px rgba(0,0,0,0.25), 0 0 0 8px #FF9933, 0 0 0 16px #138808;
+      border-radius: 24px;
+      display: block;
+      max-width: 80vw;
+      max-height: 80vh;
+      aspect-ratio: 16 / 9;
+      margin: 0 auto;
+    }
+    #highscores-panel {
+      min-width: 220px;
+      max-width: 260px;
+      min-height: 200px;
+      background: rgba(255,255,255,0.95);
+      border-radius: 16px;
+      box-shadow: 0 4px 16px rgba(0,0,0,0.15);
+      padding: 18px 16px 16px 16px;
+      z-index: 5;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      position: relative;
+      height: fit-content;
+    }
+    @media (max-width: 900px) {
+      .banner-title { font-size: 1.5rem; }
+      .banner-icon { width: 36px; height: 36px; }
+      #gameCanvas { border-radius: 12px; }
+      .game-inner { flex-direction: column; gap: 12px; }
+      #highscores-panel { min-width: 120px; max-width: 160px; font-size: 0.9rem; }
+      #dpad { display: block !important; }
+    }
+  </style>
+</head>
+<body>
+  <div class="banner">
+    <div class="banner-content">
+      <span class="banner-icon">
+        <!-- Camera + crescent moon SVG icon -->
+        <svg width="60" height="60" viewBox="0 0 60 60" fill="none">
+          <path d="M30 8a22 22 0 1 0 22 22A22 22 0 0 1 30 8z" fill="#fff" stroke="#138808" stroke-width="3"/>
+          <rect x="18" y="32" width="24" height="14" rx="3" fill="#222" stroke="#FFD700" stroke-width="2"/>
+          <circle cx="30" cy="39" r="5" fill="#FFD700" stroke="#222" stroke-width="2"/>
+          <rect x="25" y="28" width="10" height="6" rx="2" fill="#FFD700" stroke="#222" stroke-width="2"/>
+        </svg>
+      </span>
+      <span class="banner-title">Sona's Journey</span>
+    </div>
+  </div>
+  <div class="game-container">
+    <div class="game-inner">
+      <canvas id="gameCanvas" width="1280" height="720"></canvas>
+      <div id="highscores-panel">
+        <div style="font-size:1.4rem;font-weight:bold;color:#138808;margin-bottom:8px;letter-spacing:1px;text-shadow:0 2px 8px #fff;">Highscores</div>
+        <ol id="highscores-list" style="width:100%;padding-left:18px;margin:0;font-size:1.1rem;color:#333;"></ol>
+      </div>
+    </div>
+    <!-- D-pad overlay for mobile -->
+    <div id="dpad" style="position:fixed;left:0;bottom:0;width:100vw;height:40vh;z-index:20;display:none;pointer-events:none;">
+      <div style="position:absolute;left:5vw;bottom:5vw;display:flex;gap:4vw;align-items:flex-end;">
+        <button id="dpad-left" style="width:16vw;height:16vw;border-radius:50%;background:#138808;opacity:0.85;border:3px solid #FFD700;font-size:2.5rem;color:#fff;box-shadow:0 2px 8px #222;pointer-events:auto;">&#8592;</button>
+        <button id="dpad-right" style="width:16vw;height:16vw;border-radius:50%;background:#138808;opacity:0.85;border:3px solid #FFD700;font-size:2.5rem;color:#fff;box-shadow:0 2px 8px #222;pointer-events:auto;">&#8594;</button>
+      </div>
+      <div style="position:absolute;right:5vw;bottom:5vw;">
+        <button id="dpad-jump" style="width:16vw;height:16vw;border-radius:50%;background:#FF9933;opacity:0.9;border:3px solid #FFD700;font-size:2.5rem;color:#fff;box-shadow:0 2px 8px #222;pointer-events:auto;">&#8593;</button>
+      </div>
+    </div>
+  </div>
+  <!-- Hidden YouTube iframe for background music -->
+  <iframe id="bgm-yt" width="0" height="0" style="display:none" src="https://www.youtube.com/embed/1oF3FQZ5yzA?autoplay=1&loop=1&playlist=1oF3FQZ5yzA"></iframe>
+  <script>
+    // Responsive canvas sizing for 16:9
+    function resizeCanvas() {
+      const canvas = document.getElementById('gameCanvas');
+      const container = document.querySelector('.game-container');
+      const bannerHeight = document.querySelector('.banner').offsetHeight;
+      const w = window.innerWidth;
+      const h = window.innerHeight - bannerHeight;
+      let width = w, height = h;
+      if (width / 16 > height / 9) {
+        width = height * 16 / 9;
+      } else {
+        height = width * 9 / 16;
+      }
+      canvas.width = Math.round(width);
+      canvas.height = Math.round(height);
+      canvas.style.width = width + 'px';
+      canvas.style.height = height + 'px';
+      container.style.width = width + 'px';
+      container.style.height = height + 'px';
+    }
+    window.addEventListener('resize', resizeCanvas);
+    window.addEventListener('DOMContentLoaded', resizeCanvas);
+
+    const canvas = document.getElementById("gameCanvas");
+    const ctx = canvas.getContext("2d");
+
+    const gravity = 0.5;
+    const keys = {};
+    let currentLevel = 1;
+    let gameWon = false;
+    let messageAnimationFrame = 0;
+    let coins = [];
+    let coinsCollected = 0;
+    let enemies = [];
+    let autoLevelTimeout = null;
+    const TOTAL_LEVELS = 5;
+
+    // Load the logo image
+    const logoImg = new Image();
+    logoImg.src = 'sona_photos_logo.png';
+
+    // --- AUDIO SETUP ---
+    const bgMusic = new Audio('https://cdn.jsdelivr.net/gh/naptha/tablesound@main/tabla-loop.mp3'); // tabla loop mp3
+    bgMusic.loop = true;
+    bgMusic.volume = 0.5;
+    const jumpSound = new Audio('https://cdn.jsdelivr.net/gh/naptha/tablesound@main/jump.wav'); // jump wav
+    const coinSound = new Audio('https://cdn.jsdelivr.net/gh/naptha/tablesound@main/coin.wav'); // coin wav
+    let isMuted = false;
+
+    function playSound(sound) {
+      if (!isMuted) {
+        sound.currentTime = 0;
+        sound.play().catch(e => console.error('Audio play error:', e));
+      }
+    }
+
+    function toggleMute() {
+      isMuted = !isMuted;
+      bgMusic.muted = isMuted;
+    }
+
+    // --- MUTE BUTTON ---
+    const muteBtn = document.createElement('button');
+    muteBtn.style.position = 'absolute';
+    muteBtn.style.top = '20px';
+    muteBtn.style.right = '20px';
+    muteBtn.style.zIndex = 10;
+    muteBtn.style.width = '40px';
+    muteBtn.style.height = '40px';
+    muteBtn.style.borderRadius = '50%';
+    muteBtn.style.border = '2px solid #FFD700';
+    muteBtn.style.background = '#fff';
+    muteBtn.style.cursor = 'pointer';
+    muteBtn.style.display = 'flex';
+    muteBtn.style.alignItems = 'center';
+    muteBtn.style.justifyContent = 'center';
+    muteBtn.innerHTML = '🔊';
+    muteBtn.title = 'Mute/Unmute';
+    muteBtn.onclick = () => {
+      toggleMute();
+      muteBtn.innerHTML = isMuted ? '🔇' : '🔊';
+    };
+    document.body.appendChild(muteBtn);
+
+    // --- START MUSIC ON USER INTERACTION ---
+    let musicStarted = false;
+    function startMusicOnce() {
+      if (!musicStarted) {
+        bgMusic.play().catch(e => console.error('Music play error:', e));
+        musicStarted = true;
+      }
+    }
+    document.addEventListener('keydown', startMusicOnce);
+    document.addEventListener('mousedown', startMusicOnce);
+
+    // --- SCALE HELPERS ---
+    function scaleX(x) { return x * canvas.width / 1280; }
+    function scaleY(y) { return y * canvas.height / 720; }
+    function scaleW(w) { return w * canvas.width / 1280; }
+    function scaleH(h) { return h * canvas.height / 720; }
+
+    // --- POWERUP TOKEN ---
+    class PowerupToken {
+      constructor(x, y) {
+        this.x = scaleX(x);
+        this.y = scaleY(y);
+        this.radius = scaleW(18);
+        this.collected = false;
+        this.anim = 0;
+      }
+      draw() {
+        if (this.collected) return;
+        this.anim += 0.1;
+        ctx.save();
+        ctx.beginPath();
+        ctx.arc(this.x, this.y, this.radius + Math.sin(this.anim) * 2, 0, Math.PI * 2);
+        ctx.fillStyle = 'rgba(255, 215, 0, 0.7)';
+        ctx.shadowColor = '#FFD700';
+        ctx.shadowBlur = 18;
+        ctx.fill();
+        ctx.shadowBlur = 0;
+        // Coin center
+        ctx.beginPath();
+        ctx.arc(this.x, this.y, this.radius * 0.6, 0, Math.PI * 2);
+        ctx.fillStyle = '#fff';
+        ctx.fill();
+        // Lightning bolt
+        ctx.save();
+        ctx.translate(this.x, this.y);
+        ctx.rotate(Math.sin(this.anim) * 0.2);
+        ctx.beginPath();
+        ctx.moveTo(-3, -6);
+        ctx.lineTo(2, -2);
+        ctx.lineTo(-1, 2);
+        ctx.lineTo(4, 6);
+        ctx.lineTo(0, 2);
+        ctx.lineTo(-2, 6);
+        ctx.closePath();
+        ctx.fillStyle = '#FFD700';
+        ctx.shadowColor = '#FFD700';
+        ctx.shadowBlur = 8;
+        ctx.fill();
+        ctx.restore();
+        ctx.restore();
+      }
+    }
+
+    class Player {
+      constructor() {
+        this.landingSquash = 1;
+        this.squashVel = 0;
+        this.runAnim = 0;
+      }
+
+      reset() {
+        // Find the best starting platform: lowest, leftmost, widest, static
+        let startPlat = null;
+        if (typeof platforms !== 'undefined' && platforms.length > 0) {
+          // Prefer static platforms
+          let staticPlats = platforms.filter(p => !p.isMoving);
+          if (staticPlats.length > 0) {
+            startPlat = staticPlats.reduce((a, b) => (a.y > b.y ? a : b));
+          } else {
+            startPlat = platforms.reduce((a, b) => (a.y > b.y ? a : b));
+          }
+        }
+        let startX = scaleX(100);
+        let startY = canvas.height - scaleH(80);
+        if (startPlat) {
+          startX = startPlat.x + scaleW(10);
+          startY = startPlat.y - scaleH(80);
+        }
+        this.x = startX;
+        this.y = startY;
+        this.width = scaleW(50);
+        this.height = scaleH(80); // taller for a girl
+        this.dx = 0;
+        this.dy = 0;
+        this.speed = scaleW(5);
+        this.jumpForce = -scaleH(12);
+        this.grounded = false;
+        this.landingSquash = 1;
+        this.squashVel = 0;
+        this.runAnim = 0;
+      }
+
+      update(platforms) {
+        this.dy += gravity;
+
+        // Movement
+        if (keys["ArrowLeft"]) this.dx = -this.speed;
+        else if (keys["ArrowRight"]) this.dx = this.speed;
+        else this.dx = 0;
+
+        let onMovingPlatform = null;
+
+        // Save previous Y for robust collision
+        const prevY = this.y;
+
+        this.x += this.dx;
+        this.y += this.dy;
+
+        // Screen boundaries
+        if (this.x < 0) this.x = 0;
+        if (this.x + this.width > canvas.width) this.x = canvas.width - this.width;
+        
+        // Reset if fallen off
+        if (this.y > canvas.height) {
+          this.reset();
+        }
+
+        // Collision
+        let wasGrounded = this.grounded;
+        this.grounded = false;
+        for (let p of platforms) {
+          // Robust: was above, now at or below, and overlapping horizontally
+          if (
+            this.x < p.x + p.width &&
+            this.x + this.width > p.x &&
+            prevY + this.height <= p.y &&
+            this.y + this.height >= p.y &&
+            this.dy >= 0
+          ) {
+            this.y = p.y - this.height;
+            this.dy = 0;
+            this.grounded = true;
+            if (p.isMoving) {
+              onMovingPlatform = p;
+            }
+          }
+        }
+        // Move with the platform if standing on a moving one
+        if (this.grounded && onMovingPlatform) {
+          this.x += onMovingPlatform.moveSpeed * onMovingPlatform.direction;
+        }
+        // Physics: squash when landing
+        if (!wasGrounded && this.grounded) {
+          this.squashVel = -0.18;
+        }
+        this.landingSquash += this.squashVel;
+        if (this.landingSquash < 0.8) {
+          this.landingSquash = 0.8;
+          this.squashVel *= -0.5;
+        }
+        if (this.landingSquash > 1) {
+          this.landingSquash = 1;
+          this.squashVel = 0;
+        }
+        // Run animation
+        if (this.grounded && Math.abs(this.dx) > 0) {
+          this.runAnim += Math.abs(this.dx) * 0.15;
+        } else {
+          this.runAnim = 0;
+        }
+      }
+
+      jump() {
+        if (this.grounded) {
+          this.dy = this.jumpForce;
+          playSound(jumpSound);
+          if (hasDoubleJump && canDoubleJump) {
+            this.dy = this.jumpForce * 0.9;
+            canDoubleJump = false;
+            isTwirl = true;
+            twirlAnim = 0;
+            playSound(jumpSound);
+          }
+        } else if (hasDoubleJump && canDoubleJump) {
+          this.dy = this.jumpForce * 0.9;
+          canDoubleJump = false;
+          isTwirl = true;
+          twirlAnim = 0;
+          playSound(jumpSound);
+        }
+      }
+
+      draw() {
+        // Draw a young Indian princess: crown, earrings, detailed hair, lighter skin, more natural face
+        const cx = this.x + this.width / 2;
+        const cy = this.y + this.height / 2;
+        ctx.save();
+        ctx.translate(cx, cy);
+        // Twirl animation for double jump
+        if (isTwirl) {
+          twirlAnim += 0.25;
+          ctx.rotate(Math.sin(twirlAnim) * Math.PI * 0.7);
+          if (twirlAnim > Math.PI * 2) isTwirl = false;
+        }
+        ctx.scale(1, this.landingSquash);
+        // Legs (with knees)
+        let legSpread = Math.sin(this.runAnim) * this.width * 0.18;
+        ctx.save();
+        ctx.strokeStyle = '#e0b083';
+        ctx.lineWidth = this.width * 0.09;
+        ctx.lineCap = 'round';
+        ctx.beginPath();
+        // Left leg
+        ctx.moveTo(-this.width * 0.11, this.height * 0.22);
+        ctx.lineTo(-this.width * 0.11 + legSpread, this.height * 0.36);
+        ctx.lineTo(-this.width * 0.11 + legSpread, this.height * 0.45);
+        // Right leg
+        ctx.moveTo(this.width * 0.11, this.height * 0.22);
+        ctx.lineTo(this.width * 0.11 - legSpread, this.height * 0.36);
+        ctx.lineTo(this.width * 0.11 - legSpread, this.height * 0.45);
+        ctx.stroke();
+        ctx.restore();
+        // Arms (with elbows)
+        let armSwing = Math.sin(this.runAnim + Math.PI) * this.width * 0.18;
+        ctx.save();
+        ctx.strokeStyle = '#e0b083';
+        ctx.lineWidth = this.width * 0.07;
+        ctx.lineCap = 'round';
+        ctx.beginPath();
+        // Left arm
+        ctx.moveTo(-this.width * 0.19, -this.height * 0.08);
+        ctx.lineTo(-this.width * 0.27 + armSwing, this.height * 0.04);
+        ctx.lineTo(-this.width * 0.19 + armSwing, this.height * 0.13);
+        // Right arm
+        ctx.moveTo(this.width * 0.19, -this.height * 0.08);
+        ctx.lineTo(this.width * 0.27 - armSwing, this.height * 0.04);
+        ctx.lineTo(this.width * 0.19 - armSwing, this.height * 0.13);
+        ctx.stroke();
+        ctx.restore();
+        // Torso (oval)
+        ctx.beginPath();
+        ctx.ellipse(0, this.height * 0.05, this.width * 0.16, this.height * 0.22, 0, 0, Math.PI * 2);
+        ctx.fillStyle = '#c2185b';
+        ctx.shadowColor = '#FFD700';
+        ctx.shadowBlur = 8;
+        ctx.fill();
+        ctx.shadowBlur = 0;
+        // Neck
+        ctx.beginPath();
+        ctx.ellipse(0, -this.height * 0.13, this.width * 0.04, this.height * 0.03, 0, 0, Math.PI * 2);
+        ctx.fillStyle = '#e0b083';
+        ctx.fill();
+        // Head (oval, lighter skin)
+        ctx.save();
+        ctx.beginPath();
+        ctx.ellipse(0, -this.height * 0.21, this.width * 0.13, this.height * 0.15, 0, 0, Math.PI * 2);
+        ctx.fillStyle = '#e0b083';
+        ctx.shadowColor = '#FFD700';
+        ctx.shadowBlur = 10;
+        ctx.fill();
+        ctx.shadowBlur = 0;
+        // Crown
+        ctx.beginPath();
+        ctx.moveTo(-this.width * 0.07, -this.height * 0.32);
+        ctx.lineTo(0, -this.height * 0.38);
+        ctx.lineTo(this.width * 0.07, -this.height * 0.32);
+        ctx.closePath();
+        ctx.fillStyle = '#FFD700';
+        ctx.shadowColor = '#FFD700';
+        ctx.shadowBlur = 12;
+        ctx.fill();
+        ctx.shadowBlur = 0;
+        // Crown jewels
+        ctx.beginPath();
+        ctx.arc(0, -this.height * 0.36, this.width * 0.012, 0, Math.PI * 2);
+        ctx.fillStyle = '#4fc3f7';
+        ctx.fill();
+        ctx.beginPath();
+        ctx.arc(-this.width * 0.035, -this.height * 0.33, this.width * 0.009, 0, Math.PI * 2);
+        ctx.arc(this.width * 0.035, -this.height * 0.33, this.width * 0.009, 0, Math.PI * 2);
+        ctx.fillStyle = '#d32f2f';
+        ctx.fill();
+        ctx.restore();
+        // Earrings
+        ctx.save();
+        ctx.beginPath();
+        ctx.arc(-this.width * 0.09, -this.height * 0.18, this.width * 0.012, 0, Math.PI * 2);
+        ctx.arc(this.width * 0.09, -this.height * 0.18, this.width * 0.012, 0, Math.PI * 2);
+        ctx.fillStyle = '#FFD700';
+        ctx.shadowColor = '#FFD700';
+        ctx.shadowBlur = 8;
+        ctx.fill();
+        ctx.shadowBlur = 0;
+        ctx.restore();
+        // Hair (top and sides)
+        ctx.beginPath();
+        ctx.ellipse(0, -this.height * 0.25, this.width * 0.15, this.height * 0.09, 0, 0, Math.PI * 2);
+        ctx.ellipse(-this.width * 0.09, -this.height * 0.21, this.width * 0.05, this.height * 0.09, 0, 0, Math.PI * 2);
+        ctx.ellipse(this.width * 0.09, -this.height * 0.21, this.width * 0.05, this.height * 0.09, 0, 0, Math.PI * 2);
+        ctx.fillStyle = '#222';
+        ctx.fill();
+        // Bindi
+        ctx.beginPath();
+        ctx.arc(0, -this.height * 0.21, this.width * 0.018, 0, Math.PI * 2);
+        ctx.fillStyle = '#d32f2f';
+        ctx.fill();
+        // Eyes
+        ctx.beginPath();
+        ctx.ellipse(-this.width * 0.04, -this.height * 0.22, this.width * 0.012, this.height * 0.018, 0, 0, Math.PI * 2);
+        ctx.ellipse(this.width * 0.04, -this.height * 0.22, this.width * 0.012, this.height * 0.018, 0, 0, Math.PI * 2);
+        ctx.fillStyle = '#222';
+        ctx.fill();
+        // Smile
+        ctx.beginPath();
+        ctx.arc(0, -this.height * 0.18, this.width * 0.04, Math.PI * 0.15, Math.PI * 0.85);
+        ctx.lineWidth = 2;
+        ctx.strokeStyle = '#222';
+        ctx.stroke();
+        ctx.restore();
+      }
+    }
+
+    class Platform {
+      constructor(x, y, width, height, isGoal = false, isMoving = false) {
+        this.x = scaleX(x);
+        this.y = scaleY(y);
+        this.width = scaleW(width);
+        this.height = scaleH(height);
+        this.isGoal = isGoal;
+        this.isMoving = isMoving;
+        this.originalX = this.x;
+        this.moveRange = scaleW(200);
+        this.moveSpeed = scaleW(2);
+        this.direction = 1;
+      }
+      update() {
+        if (this.isMoving) {
+          this.x += this.moveSpeed * this.direction;
+          if (this.x > this.originalX + this.moveRange || this.x < this.originalX) {
+            this.direction *= -1;
+          }
+        }
+      }
+      draw() {
+        if (this.isGoal) {
+          ctx.fillStyle = "#FF9933";
+          ctx.fillRect(this.x, this.y, this.width, this.height);
+          ctx.strokeStyle = "#138808";
+          ctx.lineWidth = 4;
+          ctx.strokeRect(this.x, this.y, this.width, this.height);
+          ctx.fillStyle = "#138808";
+          ctx.beginPath();
+          ctx.arc(this.x + this.width/2, this.y + this.height/2, Math.min(this.width, this.height)/5, 0, Math.PI * 2);
+          ctx.fill();
+        } else {
+          ctx.fillStyle = "#138808";
+          ctx.fillRect(this.x, this.y, this.width, this.height);
+        }
+      }
+    }
+
+    class Coin {
+      constructor(x, y) {
+        this.x = scaleX(x);
+        this.y = scaleY(y);
+        this.radius = scaleW(18);
+        this.collected = false;
+      }
+      draw() {
+        if (this.collected) return;
+        ctx.save();
+        // Draw camera body
+        ctx.fillStyle = '#1e3a5c'; // Dark blue
+        ctx.strokeStyle = '#222'; // Black outline
+        ctx.lineWidth = 2;
+        ctx.beginPath();
+        ctx.rect(this.x - scaleW(14), this.y - scaleH(10), scaleW(28), scaleH(20));
+        ctx.fill();
+        ctx.stroke();
+        // Draw camera lens
+        ctx.beginPath();
+        ctx.arc(this.x, this.y, scaleW(7), 0, Math.PI * 2);
+        ctx.fillStyle = '#4fc3f7'; // Light blue
+        ctx.fill();
+        ctx.stroke();
+        // Draw camera top (viewfinder)
+        ctx.beginPath();
+        ctx.rect(this.x - scaleW(8), this.y - scaleH(15), scaleW(16), scaleH(6));
+        ctx.fillStyle = '#b0bec5'; // Silver/gray
+        ctx.fill();
+        ctx.stroke();
+        // Draw a small flash
+        ctx.beginPath();
+        ctx.arc(this.x + scaleW(10), this.y - scaleH(7), scaleW(2), 0, Math.PI * 2);
+        ctx.fillStyle = '#ffe082'; // Yellow
+        ctx.fill();
+        ctx.stroke();
+        ctx.restore();
+      }
+    }
+
+    class Enemy {
+      constructor(x, y, range = 100, speed = 2) {
+        this.x = scaleX(x);
+        this.y = scaleY(y);
+        this.baseX = scaleX(x);
+        this.width = scaleW(50);
+        this.height = scaleH(30);
+        this.range = scaleW(range);
+        this.speed = scaleW(speed);
+        this.direction = 1;
+        this.alive = true;
+      }
+      update() {
+        if (!this.alive) return;
+        this.x += this.speed * this.direction;
+        if (this.x > this.baseX + this.range || this.x < this.baseX - this.range) {
+          this.direction *= -1;
+        }
+      }
+      draw() {
+        if (!this.alive) return;
+        ctx.save();
+        ctx.translate(this.x + this.width/2, this.y + this.height/2);
+        ctx.scale(this.direction, 1);
+        // Draw snake body
+        ctx.beginPath();
+        ctx.moveTo(-scaleW(20), 0);
+        ctx.quadraticCurveTo(-scaleW(10), -scaleH(10), 0, 0);
+        ctx.quadraticCurveTo(scaleW(10), scaleH(10), scaleW(20), 0);
+        ctx.lineWidth = scaleW(8);
+        ctx.strokeStyle = '#FFD700';
+        ctx.shadowColor = '#FFD700';
+        ctx.shadowBlur = 10;
+        ctx.stroke();
+        // Draw snake head
+        ctx.beginPath();
+        ctx.arc(scaleW(22), 0, scaleW(8), 0, Math.PI * 2);
+        ctx.fillStyle = '#FFD700';
+        ctx.shadowBlur = 0;
+        ctx.fill();
+        // Eyes
+        ctx.beginPath();
+        ctx.arc(scaleW(25), -scaleH(3), scaleW(1.5), 0, Math.PI * 2);
+        ctx.arc(scaleW(25), scaleH(3), scaleW(1.5), 0, Math.PI * 2);
+        ctx.fillStyle = '#222';
+        ctx.fill();
+        ctx.restore();
+      }
+    }
+
+    class AngryMotherEnemy extends Enemy {
+      draw() {
+        ctx.save();
+        ctx.translate(this.x + this.width/2, this.y + this.height/2);
+        // Body (sari)
+        ctx.beginPath();
+        ctx.ellipse(0, scaleH(18), scaleW(16), scaleH(18), 0, 0, Math.PI * 2);
+        ctx.fillStyle = '#c2185b'; // Magenta sari
+        ctx.fill();
+        ctx.strokeStyle = '#880e4f';
+        ctx.lineWidth = 2;
+        ctx.stroke();
+        // Face
+        ctx.beginPath();
+        ctx.arc(0, 0, scaleW(13), 0, Math.PI * 2);
+        ctx.fillStyle = '#a0522d'; // Brown
+        ctx.fill();
+        ctx.stroke();
+        // Hair bun
+        ctx.beginPath();
+        ctx.arc(0, -scaleH(15), scaleW(6), 0, Math.PI * 2);
+        ctx.fillStyle = '#222';
+        ctx.fill();
+        // Bindi
+        ctx.beginPath();
+        ctx.arc(0, -scaleH(5), scaleW(2), 0, Math.PI * 2);
+        ctx.fillStyle = '#d32f2f';
+        ctx.fill();
+        // Angry eyebrows
+        ctx.strokeStyle = '#222';
+        ctx.lineWidth = 2;
+        ctx.beginPath();
+        ctx.moveTo(-scaleW(6), -scaleH(7));
+        ctx.lineTo(-scaleW(2), -scaleH(10));
+        ctx.moveTo(scaleW(2), -scaleH(10));
+        ctx.lineTo(scaleW(6), -scaleH(7));
+        ctx.stroke();
+        // Eyes
+        ctx.beginPath();
+        ctx.arc(-scaleW(4), -scaleH(2), scaleW(1.5), 0, Math.PI * 2);
+        ctx.arc(scaleW(4), -scaleH(2), scaleW(1.5), 0, Math.PI * 2);
+        ctx.fillStyle = '#fff';
+        ctx.fill();
+        ctx.beginPath();
+        ctx.arc(-scaleW(4), -scaleH(2), scaleW(0.7), 0, Math.PI * 2);
+        ctx.arc(scaleW(4), -scaleH(2), scaleW(0.7), 0, Math.PI * 2);
+        ctx.fillStyle = '#222';
+        ctx.fill();
+        // Frown
+        ctx.beginPath();
+        ctx.arc(0, scaleH(6), scaleW(5), Math.PI * 0.15, Math.PI * 0.85);
+        ctx.lineWidth = 2;
+        ctx.strokeStyle = '#222';
+        ctx.stroke();
+        ctx.restore();
+      }
+    }
+
+    const player = new Player();
+    let platforms = [];
+    let powerupTokens = [];
+    let hasDoubleJump = false;
+    let canDoubleJump = false;
+    let isTwirl = false;
+    let twirlAnim = 0;
+
+    function setupLevel(level) {
+      platforms = [];
+      coins = [];
+      enemies = [];
+      powerupTokens = [];
+      hasDoubleJump = false;
+      canDoubleJump = false;
+      isTwirl = false;
+      twirlAnim = 0;
+      if (level === 1) {
+        platforms = [
+          new Platform(0, 500, 800, 50), // Ground
+          new Platform(80, 400, 120, 20), // Left step
+          new Platform(300, 340, 120, 20), // Center step
+          new Platform(550, 280, 120, 20), // Right step
+          new Platform(400, 200, 120, 20), // High step
+          new Platform(650, 120, 120, 20, true) // Goal platform
+        ];
+        coins = [
+          new Coin(140, 370), // On left step
+          new Coin(360, 310), // On center step
+          new Coin(610, 250), // On right step
+          new Coin(460, 170), // On high step
+          new Coin(710, 90), // On goal
+          new Coin(250, 450), // In air above ground
+        ];
+        enemies = [
+          new Enemy(320, 320, 60, 2), // On center step
+        ];
+        powerupTokens = [new PowerupToken(250, 450)];
+      } else if (level === 2) {
+        platforms = [
+          new Platform(0, 500, 800, 50),
+          new Platform(100, 400, 150, 20, false, true),
+          new Platform(400, 400, 150, 20),
+          new Platform(200, 350, 150, 20, false, true),
+          new Platform(500, 300, 150, 20),
+          new Platform(300, 250, 150, 20, false, true),
+          new Platform(100, 200, 150, 20),
+          new Platform(400, 150, 150, 20, false, true),
+          new Platform(200, 100, 150, 20, true)
+        ];
+        coins = [
+          new Coin(175, 370),
+          new Coin(475, 320),
+          new Coin(375, 120),
+          new Coin(225, 470),
+        ];
+        enemies = [
+          new Enemy(475, 320, 80, 2.5),
+          new AngryMotherEnemy(120, 170, 60, 2),
+        ];
+        powerupTokens = [new PowerupToken(475, 320)];
+      } else if (level === 3) {
+        platforms = [
+          new Platform(0, 500, 800, 50),
+          new Platform(150, 420, 120, 20, false, true),
+          new Platform(350, 350, 120, 20),
+          new Platform(600, 300, 120, 20, false, true),
+          new Platform(250, 250, 120, 20),
+          new Platform(500, 180, 120, 20),
+          new Platform(350, 100, 120, 20, true)
+        ];
+        coins = [
+          new Coin(210, 390),
+          new Coin(410, 320),
+          new Coin(660, 270),
+          new Coin(560, 150),
+        ];
+        enemies = [
+          new Enemy(180, 420, 60, 2),
+          new AngryMotherEnemy(350, 80, 40, 1.5),
+        ];
+        powerupTokens = [new PowerupToken(410, 320)];
+      } else if (level === 4) {
+        platforms = [
+          new Platform(0, 500, 800, 50),
+          new Platform(100, 400, 100, 20, false, true),
+          new Platform(250, 320, 100, 20),
+          new Platform(400, 250, 100, 20, false, true),
+          new Platform(600, 180, 100, 20),
+          new Platform(700, 100, 100, 20, true)
+        ];
+        coins = [
+          new Coin(150, 370),
+          new Coin(300, 290),
+          new Coin(450, 220),
+          new Coin(750, 70),
+        ];
+        enemies = [
+          new Enemy(120, 400, 60, 2),
+          new AngryMotherEnemy(400, 230, 40, 2),
+        ];
+        powerupTokens = [new PowerupToken(300, 290)];
+      } else if (level === 5) {
+        platforms = [
+          new Platform(0, 500, 800, 50),
+          new Platform(200, 420, 120, 20, false, true),
+          new Platform(350, 340, 120, 20),
+          new Platform(500, 260, 120, 20, false, true),
+          new Platform(350, 180, 120, 20),
+          new Platform(500, 100, 120, 20, true)
+        ];
+        coins = [
+          new Coin(260, 400),
+          new Coin(410, 320),
+          new Coin(560, 240),
+          new Coin(560, 80),
+        ];
+        enemies = [
+          new Enemy(220, 420, 60, 2),
+          new AngryMotherEnemy(500, 100, 40, 2),
+        ];
+        powerupTokens = [new PowerupToken(410, 320)];
+      }
+      coinsCollected = 0;
+    }
+
+    document.addEventListener("keydown", (e) => {
+      keys[e.key] = true;
+      // WASD support
+      if (e.key === "w" || e.key === "W") keys["ArrowUp"] = true;
+      if (e.key === "a" || e.key === "A") keys["ArrowLeft"] = true;
+      if (e.key === "d" || e.key === "D") keys["ArrowRight"] = true;
+      if (e.key === " " || e.key === "ArrowUp" || e.key === "w" || e.key === "W") player.jump();
+      // Restart game if complete
+      if (gameWon && currentLevel === TOTAL_LEVELS && (e.key === 'r' || e.key === 'R')) {
+        gameWon = false;
+        currentLevel = 1;
+        goToLevel(1);
+        startTimer();
+      }
+    });
+
+    document.addEventListener("keyup", (e) => {
+      keys[e.key] = false;
+      // WASD support
+      if (e.key === "w" || e.key === "W") keys["ArrowUp"] = false;
+      if (e.key === "a" || e.key === "A") keys["ArrowLeft"] = false;
+      if (e.key === "d" || e.key === "D") keys["ArrowRight"] = false;
+    });
+
+    function checkWin() {
+      const goalPlatform = platforms.find(p => p.isGoal);
+      if (goalPlatform) {
+        if (
+          player.x < goalPlatform.x + goalPlatform.width &&
+          player.x + player.width > goalPlatform.x &&
+          player.y + player.height <= goalPlatform.y &&
+          player.y + player.height + player.dy >= goalPlatform.y
+        ) {
+          if (!gameWon) {
+            gameWon = true;
+            if (autoLevelTimeout) clearTimeout(autoLevelTimeout);
+            if (currentLevel < TOTAL_LEVELS) {
+              autoLevelTimeout = setTimeout(() => {
+                currentLevel++;
+                goToLevel(currentLevel);
+                gameWon = false;
+              }, 1500);
+            } else {
+              // Game complete: stop timer and update highscores immediately
+              stopTimer();
+              updateHighscores(getElapsedTime());
+            }
+          }
+        }
+      }
+    }
+
+    function checkCoinCollection() {
+      for (let coin of coins) {
+        if (!coin.collected) {
+          // Simple AABB collision
+          let distX = Math.abs((player.x + player.width/2) - coin.x);
+          let distY = Math.abs((player.y + player.height/2) - coin.y);
+          if (distX < player.width/2 + coin.radius - 5 && distY < player.height/2 + coin.radius - 5) {
+            coin.collected = true;
+            coinsCollected++;
+            playSound(coinSound);
+          }
+        }
+      }
+    }
+
+    function checkEnemyCollision() {
+      for (let enemy of enemies) {
+        if (!enemy.alive) continue;
+        // Smaller hitbox for snake
+        let hitboxPad = enemy instanceof Enemy && !(enemy instanceof AngryMotherEnemy) ? 0.25 : 0;
+        let ex = enemy.x + enemy.width * hitboxPad;
+        let ew = enemy.width * (1 - 2 * hitboxPad);
+        let ey = enemy.y + enemy.height * hitboxPad;
+        let eh = enemy.height * (1 - 2 * hitboxPad);
+        // Stomp logic for snake
+        if (
+          enemy instanceof Enemy && !(enemy instanceof AngryMotherEnemy) &&
+          player.dy > 0 &&
+          player.x + player.width > ex &&
+          player.x < ex + ew &&
+          player.y + player.height > ey &&
+          player.y + player.height - player.dy <= ey + 6 // was above last frame
+        ) {
+          enemy.alive = false;
+          player.dy = player.jumpForce * 0.7; // bounce up
+          continue;
+        }
+        // Regular collision (restart level)
+        if (
+          player.x + player.width > ex &&
+          player.x < ex + ew &&
+          player.y + player.height > ey &&
+          player.y < ey + eh
+        ) {
+          player.reset();
+          goToLevel(currentLevel);
+          break;
+        }
+      }
+    }
+
+    // --- TIMER & HIGHSCORES ---
+    let gameStartTime = null;
+    let gameEndTime = null;
+    let timerInterval = null;
+    let highscores = JSON.parse(localStorage.getItem('sona_highscores') || '[]');
+    function startTimer() {
+      gameStartTime = Date.now();
+      gameEndTime = null;
+      if (timerInterval) clearInterval(timerInterval);
+      timerInterval = setInterval(drawTimer, 100);
+    }
+    function stopTimer() {
+      if (timerInterval) clearInterval(timerInterval);
+      gameEndTime = Date.now();
+    }
+    function getElapsedTime() {
+      if (!gameStartTime) return 0;
+      return ((gameEndTime || Date.now()) - gameStartTime) / 1000;
+    }
+    function drawTimer() {
+      ctx.save();
+      ctx.font = 'bold 32px Arial';
+      ctx.fillStyle = '#FFD700';
+      ctx.shadowColor = '#138808';
+      ctx.shadowBlur = 8;
+      ctx.textAlign = 'left';
+      ctx.fillText('Time: ' + getElapsedTime().toFixed(1) + 's', 30, 110);
+      ctx.restore();
+    }
+    function updateHighscores(newTime) {
+      highscores.push(newTime);
+      highscores.sort((a, b) => a - b);
+      highscores = highscores.slice(0, 5);
+      localStorage.setItem('sona_highscores', JSON.stringify(highscores));
+      renderHighscores();
+    }
+    function renderHighscores() {
+      const list = document.getElementById('highscores-list');
+      if (!list) return;
+      list.innerHTML = highscores.map((t, i) => `<li>${t.toFixed(2)}s</li>`).join('');
+    }
+    renderHighscores();
+
+    function drawWinMessage() {
+      ctx.fillStyle = "#138808";
+      ctx.font = "48px Arial";
+      ctx.textAlign = "center";
+      if (currentLevel === TOTAL_LEVELS) {
+        // stopTimer() and updateHighscores() now handled in checkWin()
+        ctx.fillText("Game Complete!", canvas.width/2, canvas.height/2);
+        ctx.font = "24px Arial";
+        ctx.fillText("Thanks for playing!", canvas.width/2, canvas.height/2 + 40);
+        ctx.fillText("Press 'R' to restart", canvas.width/2, canvas.height/2 + 80);
+        // Animated gold message
+        const baseY = canvas.height/2 + 140;
+        const pulse = 1 + 0.1 * Math.sin(messageAnimationFrame * 0.1);
+        ctx.save();
+        ctx.translate(canvas.width/2, baseY);
+        ctx.scale(pulse, pulse);
+        ctx.font = "bold 64px Arial";
+        ctx.fillStyle = "#FFD700";
+        ctx.shadowColor = '#FFD700';
+        ctx.shadowBlur = 20;
+        ctx.fillText("I love you Sonali", 0, 0);
+        ctx.restore();
+        messageAnimationFrame++;
+      } else {
+        ctx.fillText("Level Complete!", canvas.width/2, canvas.height/2);
+        ctx.font = "24px Arial";
+        ctx.fillText("Next level starting...", canvas.width/2, canvas.height/2 + 40);
+        messageAnimationFrame = 0;
+      }
+    }
+
+    function drawLevelNumber() {
+      ctx.fillStyle = "#138808";
+      ctx.font = "24px Arial";
+      ctx.textAlign = "left";
+      ctx.fillText(`Level ${currentLevel}`, 20, 40);
+    }
+
+    function drawCoinScore() {
+      ctx.save();
+      ctx.font = 'bold 24px Arial';
+      ctx.fillStyle = '#FFD700';
+      ctx.shadowColor = '#FFD700';
+      ctx.shadowBlur = 10;
+      ctx.textAlign = 'left';
+      ctx.fillText(`Coins: ${coinsCollected} / ${coins.length}`, 20, 70);
+      ctx.restore();
+    }
+
+    function gameLoop() {
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+      if (!gameWon) {
+        platforms.forEach(p => p.update());
+        player.update(platforms);
+        checkWin();
+        checkCoinCollection();
+        enemies.forEach(e => e.update());
+        checkEnemyCollision();
+      }
+      player.draw();
+      platforms.forEach(p => p.draw());
+      coins.forEach(c => c.draw());
+      enemies.forEach(e => e.draw());
+      drawLevelNumber();
+      drawCoinScore();
+      drawTimer();
+      if (gameWon) {
+        drawWinMessage();
+      }
+      requestAnimationFrame(gameLoop);
+    }
+
+    // Update all game objects on resize
+    function rescaleGameObjects() {
+      // Rescale platforms, coins, enemies, and player
+      setupLevel(currentLevel);
+      player.reset();
+    }
+    window.addEventListener('resize', rescaleGameObjects);
+
+    // On level change, always setupLevel before player.reset()
+    function goToLevel(level) {
+      setupLevel(level);
+      player.reset();
+    }
+
+    // Initial game setup
+    goToLevel(1);
+    startTimer();
+    gameLoop();
+
+    // --- D-PAD FOR MOBILE ---
+    function isMobile() {
+      return /Android|iPhone|iPad|iPod|Opera Mini|IEMobile|WPDesktop/i.test(navigator.userAgent);
+    }
+    function setupDpad() {
+      const dpad = document.getElementById('dpad');
+      if (!dpad) return;
+      if (isMobile()) {
+        dpad.style.display = 'block';
+      } else {
+        dpad.style.display = 'none';
+      }
+      const left = document.getElementById('dpad-left');
+      const right = document.getElementById('dpad-right');
+      const jump = document.getElementById('dpad-jump');
+      // Touch events for D-pad
+      left.ontouchstart = e => { e.preventDefault(); keys['ArrowLeft'] = true; };
+      left.ontouchend = e => { e.preventDefault(); keys['ArrowLeft'] = false; };
+      right.ontouchstart = e => { e.preventDefault(); keys['ArrowRight'] = true; };
+      right.ontouchend = e => { e.preventDefault(); keys['ArrowRight'] = false; };
+      jump.ontouchstart = e => { e.preventDefault(); keys['ArrowUp'] = true; player.jump(); };
+      jump.ontouchend = e => { e.preventDefault(); keys['ArrowUp'] = false; };
+    }
+    window.addEventListener('DOMContentLoaded', setupDpad);
+    window.addEventListener('resize', setupDpad);
+  </script>
+</body>
+</html> 
